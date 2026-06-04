@@ -60,72 +60,72 @@ jobs:
 
   # ── Job 2: Deploy ─────────────────────────────────────────
   deploy:
-    name: Deploy to Azure VM
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+  name: Deploy to Azure VM
+  needs: test
+  runs-on: ubuntu-latest
+  if: github.ref == 'refs/heads/main'
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+    - name: Setup SSH
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_ed25519
+        chmod 600 ~/.ssh/id_ed25519
+        ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Deploy to VM
-        env:
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_USER: ${{ secrets.VPS_USERNAME }}
-          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
-        run: |
-          ssh $VPS_USER@$VPS_HOST << ENDSSH
-            set -e
+    - name: Deploy to VM
+      env:
+        VPS_HOST: ${{ secrets.VPS_HOST }}
+        VPS_USER: ${{ secrets.VPS_USERNAME }}
+        DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+      run: |
+        ssh $VPS_USER@$VPS_HOST << ENDSSH
+          set -e
 
-            echo "=== DEPLOY START ==="
+          echo "=== DEPLOY START ==="
 
-            echo "Repositorio:"
-            cd "$DEPLOY_PATH"
+          echo "Repositorio:"
+          cd "$DEPLOY_PATH"
 
-            if [ ! -d ".git" ]; then
-              echo "ERROR: No se encontró la carpeta .git"
-              exit 1
-            fi
+          if [ ! -d ".git" ]; then
+            echo "ERROR: No se encontró la carpeta .git"
+            exit 1
+          fi
 
-            echo "Directorio actual:"
-            pwd
+          echo "Directorio actual:"
+          pwd
 
-            echo "Actualizando código..."
-            git fetch origin
-            git reset --hard origin/main
+          echo "Actualizando código..."
+          git fetch origin
+          git reset --hard origin/main
 
-            echo "Instalando dependencias..."
-            uv sync --frozen
+          echo "Instalando dependencias..."
+          uv sync --frozen
 
-            echo "Aplicando migraciones..."
-            uv run python manage.py migrate --noinput
+          echo "Aplicando migraciones..."
+          uv run python manage.py migrate --noinput
 
-            echo "Recolectando archivos estáticos..."
-            uv run python manage.py collectstatic --noinput --clear
+          echo "Recolectando archivos estáticos..."
+          uv run python manage.py collectstatic --noinput --clear
 
-            echo "Reiniciando Gunicorn..."
-            sudo systemctl restart gunicorn-sacramento
+          echo "Reiniciando Gunicorn..."
+          sudo systemctl restart gunicorn-sacramento
 
-            echo "Reiniciando Nginx..."
-            sudo systemctl restart nginx
+          echo "Reiniciando Nginx..."
+          sudo systemctl restart nginx
 
-            echo "Verificando servicios..."
-            sudo systemctl is-active gunicorn-sacramento
-            sudo systemctl is-active nginx
+          echo "Verificando servicios..."
+          sudo systemctl is-active gunicorn-sacramento
+          sudo systemctl is-active nginx
 
-            echo "Verificando API..."
-            sleep 5
+          echo "Verificando API..."
+          sleep 5
 
-            curl --fail http://127.0.0.1/api/health/
+          curl --fail http://127.0.0.1/api/health/
 
-            echo ""
-            echo "=== DEPLOY EXITOSO ==="
-          ENDSSH 
+          echo ""
+          echo "=== DEPLOY EXITOSO ==="
+        ENDSSH
