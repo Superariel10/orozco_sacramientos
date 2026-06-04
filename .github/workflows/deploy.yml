@@ -109,6 +109,18 @@ jobs:
             ls -la .git || echo ".git NO existe"
 
             echo "Estado Git:"
-            git status
+            git status 
+            echo "Obteniendo cambios..."
+            echo "PWD ANTES DEL FETCH:"
+            pwd
+
+            echo "REMOTES:"
+            git remote -v
+
+            echo "FETCH:"
+            git fetch origin
+
+            echo "RESET:"
+            git reset --hard origin/main
 
           ENDSSH
