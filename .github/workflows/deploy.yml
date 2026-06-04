@@ -100,7 +100,7 @@ jobs:
             uv run python manage.py collectstatic --noinput --clear
 
             echo "── 5. Reiniciando servicios ──"
-            sudo systemctl restart gunicorn-shopapi
+            sudo systemctl restart gunicorn-sacramento
             sudo systemctl restart nginx
 
             echo "── 6. Verificando salud de la API ──"
