@@ -124,7 +124,7 @@ jobs:
             echo "Verificando API..."
             sleep 5
 
-            curl --fail http://127.0.0.1/api/health/
+            curl --fail http://20.163.1.12/api/health/
 
             echo ""
             echo "=== DEPLOY EXITOSO ==="
